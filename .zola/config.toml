@@ -5,7 +5,7 @@ description = "Digital Garden & Portfolio"
 
 # Lingua principale (i file .md senza suffisso sono considerati IT)
 default_language = "it"
-generate_feed = true
+generate_feeds = true
 
 # Tema
 theme = "duckquill"
