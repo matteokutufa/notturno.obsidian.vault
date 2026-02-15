@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% if config.extra.menu %}
+    <nav>
+        {% for item in config.extra.menu %}
+            <a href="{{ item.link | replace_url }}">{{ item.name }}</a>
+        {% endfor %}
+    </nav>
+{% endif %}
+
 {% block content %}
 <div class="home-container">
     <section class="post-list">
