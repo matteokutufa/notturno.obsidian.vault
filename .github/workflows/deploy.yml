@@ -1,0 +1,143 @@
+name: Deploy Obsidian Vault to Notturno.net
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy.yml'
+      - '.zola/**'
+      - 'Journal/**'
+      - 'Idées/**'
+      - 'Idees/**'
+      - 'Projets/**'
+      - 'Liens/**'
+      - 'Pages/**'
+      - 'Assets/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Vault
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Zola
+        uses: taiki-e/install-action@v2
+        with:
+          tool: zola@0.19.1
+
+      # --- FASE 1: BASH (Flattening & CNAME) ---
+      - name: 🛠️ Flatten & Transform Vault
+        run: |
+          echo "--- Inizio Appiattimento Strutturale ---"
+          
+          # 1. Setup cartelle root pulite
+          mkdir -p .zola/content/journal .zola/content/idees .zola/content/projets .zola/content/liens
+          mkdir -p .zola/static/assets
+          
+          # 2. FLATTENING: Estrae tutti i .md ignorando la nidificazione di Obsidian
+          # Li sposta direttamente nella root della loro sezione Zola
+          find Journal/ -name "*.md" -exec cp {} .zola/content/journal/ \; 2>/dev/null || true
+          find Idées/ -name "*.md" -exec cp {} .zola/content/idees/ \; 2>/dev/null || true
+          find Idees/ -name "*.md" -exec cp {} .zola/content/idees/ \; 2>/dev/null || true
+          find Projets/ -name "*.md" -exec cp {} .zola/content/projets/ \; 2>/dev/null || true
+          find Liens/ -name "*.md" -exec cp {} .zola/content/liens/ \; 2>/dev/null || true
+          
+          # 3. Pagine Singole e CNAME per GitHub Pages/Cluster
+          if [ -d "Pages" ]; then cp Pages/*.md .zola/content/; fi
+          echo "notturno.net" > .zola/static/CNAME
+          
+          # 4. ASSETS FLATTENING: Raccoglie tutte le immagini e le mette in /assets/
+          find . -type d -name "Assets" -not -path "./.zola/*" -exec cp -r {}/* .zola/static/assets/ \; 2>/dev/null || true
+
+          # 5. Generazione Index ROOT (Semplice, non trasparente)
+          for s in journal idees projets liens; do
+            TITLE=$(echo "$s" | sed 's/./\U&/')
+            if [ "$s" == "idees" ]; then TITLE="Idées"; fi
+            echo -e "+++\ntitle = \"$TITLE\"\nsort_by = \"date\"\ntemplate = \"section.html\"\n+++" > ".zola/content/$s/_index.md"
+          done
+
+      # --- FASE 2: PYTHON (Metadata, Slug WordPress-style & Asset Fix) ---
+      - name: 🧠 Auto-Inject Metadata & Fix Links
+        shell: python
+        run: |
+          import os, re, unicodedata
+          from datetime import datetime
+
+          content_dir = ".zola/content"
+          obs_img = re.compile(r'!\[\[(.*?)(?:\|(.*?))?\]\]')
+
+          def slugify(t):
+              """Slug puliti per URL (es: 'Mio Post' -> 'mio-post')"""
+              t = unicodedata.normalize('NFKD', t).encode('ascii', 'ignore').decode('utf-8')
+              return re.sub(r'[-\s]+', '-', re.sub(r'[^\w\s-]', '', t).strip().lower())
+
+          print("--- Avvio Elaborazione Contenuti ---")
+
+          for root, dirs, files in os.walk(content_dir):
+              for fn in files:
+                  if not fn.endswith(".md") or fn.startswith("_index"): continue
+                  fp = os.path.join(root, fn)
+                  
+                  with open(fp, 'r', encoding='utf-8') as f: lines = f.readlines()
+                  
+                  # 1. Front Matter Injection
+                  if not (len(lines) > 0 and lines[0].strip() == '+++'):
+                      raw = fn.replace(".md", "")
+                      # Cerca data nel nome file (YYYY-MM-DD-Titolo)
+                      m = re.match(r'^(\d{4}-\d{2}-\d{2})-(.*)', raw)
+                      d_str = m.group(1) if m else datetime.utcnow().strftime('%Y-%m-%d')
+                      t_raw = m.group(2).replace("-", " ") if m else raw.replace("-", " ")
+                      
+                      fm = [
+                          "+++\n",
+                          f"title = \"{t_raw.title()}\"\n",
+                          f"date = {d_str}\n",
+                          f"slug = \"{slugify(t_raw)}\"\n",
+                          "template = \"page.html\"\n",
+                          "+++\n\n"
+                      ]
+                      # Rimuove H1 ridondante se presente
+                      body_start = 0
+                      if len(lines) > 0 and lines[0].strip().startswith("# "):
+                          body_start = 1
+                          while body_start < len(lines) and lines[body_start].strip() == "": body_start += 1
+                      
+                      content_str = "".join(fm + lines[body_start:])
+                  else:
+                      content_str = "".join(lines)
+
+                  # 2. Fix Immagini (Percorso assoluto /assets/)
+                  def repl(ma):
+                      img_fn = os.path.basename(ma.group(1).strip())
+                      alt = ma.group(2).strip() if ma.group(2) else ""
+                      return f'![{alt}](/assets/{img_fn})'
+
+                  new_content = obs_img.sub(repl, content_str)
+
+                  with open(fp, 'w', encoding='utf-8') as f:
+                      f.write(new_content)
+          print("--- Elaborazione completata ---")
+
+      - name: 🏗️ Build Site
+        working-directory: .zola
+        run: zola build --base-url https://notturno.net
+
+      - name: 🚀 Deploy to Backup Repo
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: '.zola/public'
+          destination-github-username: 'matteokutufa'
+          destination-repository-name: 'notturno.net'
+          user-email: 'mk@bytehawks.org'
+          target-branch: main
+          commit-message: "Deploy: ${{ github.event.head_commit.message }}"
