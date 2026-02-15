@@ -1,0 +1,11 @@
+{% extends "index.html" %}
+{% block content %}
+<h1>{{ section.title }}</h1>
+<ul>
+    {% for page in section.pages %}
+    <li>
+        <a href="{{ page.permalink }}">{{ page.title }}</a> - {{ page.date }}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock content %}

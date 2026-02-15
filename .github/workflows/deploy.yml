@@ -19,13 +19,10 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout Vault
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
 
       - name: Install Zola
@@ -33,104 +30,97 @@ jobs:
         with:
           tool: zola@0.19.1
 
-      # --- FASE 1: BASH (Flattening & CNAME) ---
-      - name: 🛠️ Flatten & Transform Vault
+      # --- FASE 1: BASH (Spostamento Asset e Pulizia) ---
+      - name: 🛠️ Resource Management & Flattening
         run: |
-          echo "--- Inizio Appiattimento Strutturale ---"
-          
-          # 1. Setup cartelle root pulite
-          mkdir -p .zola/content/journal .zola/content/idees .zola/content/projets .zola/content/liens
+          echo "--- Gestione Risorse Non-Markdown ---"
           mkdir -p .zola/static/assets
+          mkdir -p .zola/content/journal .zola/content/idees .zola/content/projets .zola/content/liens
           
-          # 2. FLATTENING: Estrae tutti i .md ignorando la nidificazione di Obsidian
-          # Li sposta direttamente nella root della loro sezione Zola
-          find Journal/ -name "*.md" -exec cp {} .zola/content/journal/ \; 2>/dev/null || true
-          find Idées/ -name "*.md" -exec cp {} .zola/content/idees/ \; 2>/dev/null || true
-          find Idees/ -name "*.md" -exec cp {} .zola/content/idees/ \; 2>/dev/null || true
-          find Projets/ -name "*.md" -exec cp {} .zola/content/projets/ \; 2>/dev/null || true
-          find Liens/ -name "*.md" -exec cp {} .zola/content/liens/ \; 2>/dev/null || true
+          # Sposta tutti i file NON .md in static/assets (escludendo la cartella .zola stessa)
+          find . -type f ! -name "*.md" -not -path "./.zola/*" -not -path "./.git/*" -exec mv {} .zola/static/assets/ \;
           
-          # 3. Pagine Singole e CNAME per GitHub Pages/Cluster
-          if [ -d "Pages" ]; then cp Pages/*.md .zola/content/; fi
-          echo "notturno.net" > .zola/static/CNAME
-          
-          # 4. ASSETS FLATTENING: Raccoglie tutte le immagini e le mette in /assets/
-          find . -type d -name "Assets" -not -path "./.zola/*" -exec cp -r {}/* .zola/static/assets/ \; 2>/dev/null || true
+          # Rimuove le cartelle Assets ora vuote
+          find . -type d -name "Assets" -exec rm -rf {} + 2>/dev/null || true
 
-          # 5. Generazione Index ROOT (Semplice, non trasparente)
-          for s in journal idees projets liens; do
-            TITLE=$(echo "$s" | sed 's/./\U&/')
-            if [ "$s" == "idees" ]; then TITLE="Idées"; fi
-            echo -e "+++\ntitle = \"$TITLE\"\nsort_by = \"date\"\ntemplate = \"section.html\"\n+++" > ".zola/content/$s/_index.md"
-          done
+          echo "--- Flattening Post ---"
+          # Spostiamo i file mantenendo traccia del path per Python (temporaneamente)
+          # Usiamo cp e poi rm per evitare errori di find durante lo spostamento
+          cp -r Journal/* .zola/content/journal/ 2>/dev/null || true
+          cp -r Idées/* .zola/content/idees/ 2>/dev/null || true
+          cp -r Idees/* .zola/content/idees/ 2>/dev/null || true
+          cp -r Projets/* .zola/content/projets/ 2>/dev/null || true
+          cp -r Liens/* .zola/content/liens/ 2>/dev/null || true
 
-      # --- FASE 2: PYTHON (Metadata, Slug WordPress-style & Asset Fix) ---
-      - name: 🧠 Auto-Inject Metadata & Fix Links
+          # Pulizia root dalle cartelle originali (ormai processate)
+          rm -rf Journal Idées Idees Projets Liens Pages Assets
+
+      # --- FASE 2: PYTHON (Data da Path, Slug e Fix Link) ---
+      - name: 🧠 Logic Injection (Path to Date)
         shell: python
         run: |
           import os, re, unicodedata
           from datetime import datetime
 
           content_dir = ".zola/content"
+          # Regex per estrarre AAAA/MM dal percorso
+          path_date_re = re.compile(r'(\d{4})[\\/](\d{2})')
           obs_img = re.compile(r'!\[\[(.*?)(?:\|(.*?))?\]\]')
 
           def slugify(t):
-              """Slug puliti per URL (es: 'Mio Post' -> 'mio-post')"""
               t = unicodedata.normalize('NFKD', t).encode('ascii', 'ignore').decode('utf-8')
               return re.sub(r'[-\s]+', '-', re.sub(r'[^\w\s-]', '', t).strip().lower())
-
-          print("--- Avvio Elaborazione Contenuti ---")
 
           for root, dirs, files in os.walk(content_dir):
               for fn in files:
                   if not fn.endswith(".md") or fn.startswith("_index"): continue
                   fp = os.path.join(root, fn)
                   
+                  # 1. Recupero data dal percorso AAAA/MM
+                  date_match = path_date_re.search(fp)
+                  if date_match:
+                      # Se trovato nel path, impostiamo come YYYY-MM-01 (giorno fittizio se manca)
+                      extracted_date = f"{date_match.group(1)}-{date_match.group(2)}-01"
+                  else:
+                      extracted_date = datetime.utcnow().strftime('%Y-%m-%d')
+
                   with open(fp, 'r', encoding='utf-8') as f: lines = f.readlines()
                   
-                  # 1. Front Matter Injection
-                  if not (len(lines) > 0 and lines[0].strip() == '+++'):
-                      raw = fn.replace(".md", "")
-                      # Cerca data nel nome file (YYYY-MM-DD-Titolo)
-                      m = re.match(r'^(\d{4}-\d{2}-\d{2})-(.*)', raw)
-                      d_str = m.group(1) if m else datetime.utcnow().strftime('%Y-%m-%d')
-                      t_raw = m.group(2).replace("-", " ") if m else raw.replace("-", " ")
-                      
-                      fm = [
-                          "+++\n",
-                          f"title = \"{t_raw.title()}\"\n",
-                          f"date = {d_str}\n",
-                          f"slug = \"{slugify(t_raw)}\"\n",
-                          "template = \"page.html\"\n",
-                          "+++\n\n"
-                      ]
-                      # Rimuove H1 ridondante se presente
-                      body_start = 0
-                      if len(lines) > 0 and lines[0].strip().startswith("# "):
-                          body_start = 1
-                          while body_start < len(lines) and lines[body_start].strip() == "": body_start += 1
-                      
-                      content_str = "".join(fm + lines[body_start:])
-                  else:
-                      content_str = "".join(lines)
-
-                  # 2. Fix Immagini (Percorso assoluto /assets/)
+                  # Generazione Titolo e Slug
+                  raw_title = fn.replace(".md", "").replace("-", " ")
+                  
+                  # Front Matter
+                  fm = [
+                      "+++\n",
+                      f"title = \"{raw_title.title()}\"\n",
+                      f"date = {extracted_date}\n",
+                      f"slug = \"{slugify(raw_title)}\"\n",
+                      "template = \"page.html\"\n",
+                      "+++\n\n"
+                  ]
+                  
+                  # 2. Fix link immagini (tutte in /assets/)
                   def repl(ma):
-                      img_fn = os.path.basename(ma.group(1).strip())
-                      alt = ma.group(2).strip() if ma.group(2) else ""
-                      return f'![{alt}](/assets/{img_fn})'
+                      img_fn = os.path.basename(ma.group(1).strip()).replace(" ", "%20")
+                      return f'![image](/assets/{img_fn})'
 
-                  new_content = obs_img.sub(repl, content_str)
+                  body = "".join(lines)
+                  # Rimuove H1 se duplicato
+                  body = re.sub(r'^#\s+.*\n?', '', body, flags=re.MULTILINE)
+                  new_content = "".join(fm) + obs_img.sub(repl, body)
 
-                  with open(fp, 'w', encoding='utf-8') as f:
-                      f.write(new_content)
-          print("--- Elaborazione completata ---")
+                  with open(fp, 'w', encoding='utf-8') as f: f.write(new_content)
 
-      - name: 🏗️ Build Site
-        working-directory: .zola
-        run: zola build --base-url https://notturno.net
+      # --- FASE 3: BUILD ---
+      - name: 🏗️ Build Zola
+        run: |
+          # Creazione index root per abilitare il sorting in home
+          for s in journal idees projets liens; do
+             echo -e "+++\ntitle = \"$s\"\nsort_by = \"date\"\ntransparent = true\n+++" > .zola/content/$s/_index.md
+          done
+          cd .zola && zola build --base-url https://notturno.net
 
-      - name: 🚀 Deploy to Backup Repo
+      - name: 🚀 Deploy
         uses: cpina/github-action-push-to-another-repository@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
@@ -140,4 +130,4 @@ jobs:
           destination-repository-name: 'notturno.net'
           user-email: 'mk@bytehawks.org'
           target-branch: main
-          commit-message: "Deploy: ${{ github.event.head_commit.message }}"
+
