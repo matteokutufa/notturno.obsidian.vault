@@ -5,8 +5,8 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/deploy.yaml'
       - '.github/workflows/deploy.yml'
+      - '.github/workflows/deploy.yaml'
       - '.zola/**'
       - 'Journal/**'
       - 'Idées/**'
@@ -34,17 +34,13 @@ jobs:
         with:
           tool: zola@0.19.1
 
-      ###
-      # --- FASE 1: BASH (Struttura File System) ---
       - name: 🛠️ Transform Vault to Zola Structure
         run: |
-          echo "--- Inizio Trasformazione Strutturale ---"
-          
-          # 1. Preparazione Cartelle Root
+          # 1. Pulizia e Setup
           mkdir -p .zola/content/journal .zola/content/idees .zola/content/projets .zola/content/liens
-          mkdir -p .zola/static
+          mkdir -p .zola/static/assets # Cartella dedicata per evitare 404
           
-          # 2. Copia Contenuti mantenendo la nidificazione
+          # 2. Copia Contenuti
           cp -r Journal/* .zola/content/journal/ 2>/dev/null || true
           if [ -d "Idées" ]; then cp -r Idées/* .zola/content/idees/; fi
           if [ -d "Idees" ]; then cp -r Idees/* .zola/content/idees/; fi
@@ -55,118 +51,80 @@ jobs:
           if [ -d "Pages" ]; then cp Pages/*.md .zola/content/; fi
           echo "notturno.net" > .zola/static/CNAME
           
-          # 4. Assets: centralizzazione (rimuoviamo la nidificazione per il web)
-          find . -type d -name "Assets" -not -path "./.zola/*" -exec cp -r {}/* .zola/static/ \; 2>/dev/null || true
+          # 4. Assets Centralizzati in /assets/
+          find . -type d -name "Assets" -not -path "./.zola/*" -exec cp -r {}/* .zola/static/assets/ \; 2>/dev/null || true
 
-          # 5. Generazione Index Ricorsiva (Fix per Sezioni Trasparenti)
+          # 5. Generazione Index Ricorsiva
           find .zola/content -type d -not -path ".zola/content" | while read -r dir; do
             if [ ! -f "$dir/_index.md" ]; then
               SECTION_NAME=$(basename "$dir")
-              # Controlliamo se è una sezione root
               IS_ROOT=false
               for r in journal idees projets liens; do
                 if [[ "$dir" == ".zola/content/$r" ]]; then IS_ROOT=true; fi
               done
 
               if [ "$IS_ROOT" = true ]; then
-                # Sezione principale (mostra i post ma non è trasparente verso sopra)
                 TITLE=$(echo "$SECTION_NAME" | sed 's/./\U&/')
                 if [ "$SECTION_NAME" == "idees" ]; then TITLE="Idées"; fi
                 echo -e "+++\ntitle = \"$TITLE\"\nsort_by = \"date\"\ntemplate = \"section.html\"\n+++" > "$dir/_index.md"
               else
-                # Sottocartella (Anno, Mese, etc): deve essere trasparente
                 echo -e "+++\ntitle = \"$SECTION_NAME\"\nsort_by = \"date\"\ntemplate = \"section.html\"\ntransparent = true\n+++" > "$dir/_index.md"
               fi
             fi
           done
 
-      # --- FASE 2: PYTHON (Logica WordPress, Slug, Fix Immagini Assolute) ---
       - name: 🧠 Auto-Inject Metadata & Fix Links
         shell: python
         run: |
-          import os
-          import re
-          import unicodedata
+          import os, re, unicodedata
           from datetime import datetime
 
           content_dir = ".zola/content"
-          obsidian_img_regex = re.compile(r'!\[\[(.*?)(?:\|(.*?))?\]\]')
+          obs_img = re.compile(r'!\[\[(.*?)(?:\|(.*?))?\]\]')
 
-          def slugify(text):
-              text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
-              text = re.sub(r'[^\w\s-]', '', text).strip().lower()
-              return re.sub(r'[-\s]+', '-', text)
+          def slugify(t):
+              t = unicodedata.normalize('NFKD', t).encode('ascii', 'ignore').decode('utf-8')
+              return re.sub(r'[-\s]+', '-', re.sub(r'[^\w\s-]', '', t).strip().lower())
 
           for root, dirs, files in os.walk(content_dir):
-              for filename in files:
-                  if not filename.endswith(".md") or filename.startswith("_index"): continue
-                  filepath = os.path.join(root, filename)
+              for fn in files:
+                  if not fn.endswith(".md") or fn.startswith("_index"): continue
+                  fp = os.path.join(root, fn)
+                  with open(fp, 'r', encoding='utf-8') as f: lines = f.readlines()
                   
-                  try:
-                      with open(filepath, 'r', encoding='utf-8') as f:
-                          lines = f.readlines()
+                  if not (len(lines) > 0 and lines[0].strip() == '+++'):
+                      raw = fn.replace(".md", "")
+                      m = re.match(r'^(\d{4}-\d{2}-\d{2})-(.*)', raw)
+                      d_str = m.group(1) if m else datetime.utcnow().strftime('%Y-%m-%d')
+                      t_raw = m.group(2).replace("-", " ") if m else raw.replace("-", " ")
                       
-                      has_frontmatter = len(lines) > 0 and lines[0].strip() == '+++'
-                      
-                      if not has_frontmatter:
-                          # Estrazione Data e Titolo dal nome file
-                          date_str = datetime.utcnow().strftime('%Y-%m-%d')
-                          raw_name = filename.replace(".md", "")
-                          file_date_match = re.match(r'^(\d{4}-\d{2}-\d{2})-(.*)', raw_name)
-                          
-                          if file_date_match:
-                              date_str = file_date_match.group(1)
-                              title_raw = file_date_match.group(2).replace("-", " ").strip()
-                          else:
-                              title_raw = raw_name.replace("-", " ").strip()
-                              # Fallback data da cartelle padre
-                              path_parts = filepath.split(os.sep)
-                              f_year = next((p for p in path_parts if re.match(r'^\d{4}$', p)), None)
-                              f_month = next((p for p in path_parts if re.match(r'^\d{2}$', p) and 1<=int(p)<=12), "01")
-                              if f_year: date_str = f"{f_year}-{f_month}-01"
+                      # Fallback data da folder
+                      if not m:
+                          pts = fp.split(os.sep)
+                          y = next((p for p in pts if re.match(r'^\d{4}$', p)), None)
+                          mo = next((p for p in pts if re.match(r'^\d{2}$', p) and 1<=int(p)<=12), "01")
+                          if y: d_str = f"{y}-{mo}-01"
 
-                          final_title = title_raw
-                          final_slug = slugify(final_title)
+                      fm = [f"+++\ntitle = \"{t_raw.title()}\"\ndate = {d_str}\nslug = \"{slugify(t_raw)}\"\ntemplate = \"page.html\"\n+++\n\n"]
+                      body = lines[1:] if len(lines) > 0 and lines[0].startswith("# ") else lines
+                      c_str = "".join(fm + body)
+                  else:
+                      c_str = "".join(lines)
 
-                          # Pulizia H1 se presente
-                          body_start = 0
-                          if len(lines) > 0 and lines[0].strip().startswith("# "):
-                              body_start = 1
-                              while body_start < len(lines) and lines[body_start].strip() == "": body_start += 1
-                          
-                          fm = [
-                              "+++\n",
-                              f"title = \"{final_title}\"\n",
-                              f"date = {date_str}\n",
-                              f"slug = \"{final_slug}\"\n",
-                              "template = \"page.html\"\n",
-                              "+++\n\n"
-                          ]
-                          content_str = "".join(fm + lines[body_start:])
-                      else:
-                          content_str = "".join(lines)
+                  # FIX IMMAGINI: Tutti i link puntano a /assets/
+                  def repl(ma):
+                      p = os.path.basename(ma.group(1).strip())
+                      a = ma.group(2).strip() if ma.group(2) else ""
+                      return f'![{a}](/assets/{p})'
 
-                      # FIX IMMAGINI: Forza slash iniziale per path assoluto dalla root
-                      def replace_img(match):
-                          img_path = match.group(1).strip()
-                          alt = match.group(2).strip() if match.group(2) else ""
-                          # Rimuove eventuali prefissi 'Assets/' perché in Zola sono in root /static/
-                          name_only = os.path.basename(img_path)
-                          return f'![{alt}](/{name_only})'
-
-                      new_content, count = obsidian_img_regex.subn(replace_img, content_str)
-
-                      with open(filepath, 'w', encoding='utf-8') as f:
-                          f.write(new_content)
-
-                  except Exception as e:
-                      print(f"Error processing {filepath}: {e}")
+                  with open(fp, 'w', encoding='utf-8') as f:
+                      f.write(obs_img.sub(repl, c_str))
 
       - name: 🏗️ Build Site
         working-directory: .zola
         run: zola build --base-url https://notturno.net
 
-      - name: 🚀 Deploy to Backup Repo
+      - name: 🚀 Deploy
         uses: cpina/github-action-push-to-another-repository@main
         env:
           API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}

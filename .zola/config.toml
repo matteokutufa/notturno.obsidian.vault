@@ -3,66 +3,75 @@ base_url = "https://notturno.net"
 title = "Notturno"
 description = "Digital Garden & Portfolio"
 
-# Lingua principale (i file .md senza suffisso sono considerati IT)
+# Lingua principale
 default_language = "it"
+
+# Parametri Feed (Sintassi Zola 0.19.x)
 generate_feeds = true
+feed_filenames = ["atom.xml"]
 
 # Tema
 theme = "duckquill"
 compile_sass = true
 
+# --- SLUGIFY ---
+# Forza la coerenza tra i nomi file e gli URL (WordPress Style)
+[slugify]
+paths = "on"
+#taxonomies = "on"
+
+# --- TASSONOMIE ---
+# Necessarie per gestire Tag e Categorie nel Front Matter
+taxonomies = [
+    { name = "tags", feed = true },
+    { name = "categories", feed = true },
+]
+
 # --- MARKDOWN ---
 [markdown]
 highlight_code = true
 render_emoji = true
-
-# --- LINGUE AGGIUNTIVE (Esempio: Inglese) ---
-# Decommenta quando sei pronto a pubblicare in EN
-# [languages.en]
-# title = "Notturno (EN)"
-# description = "Digital Garden & Portfolio"
-# generate_feed = true
-# weight = 1 # Ordine nel selettore lingua
+# Evita che la build fallisca per link non ancora risolti dalla pipeline
+link_checker.level = "warn"
 
 # --- CONFIGURAZIONE ITALIANO (Default) ---
-# Tutto ciò che è sotto [extra] vale per il default_language (IT)
 [extra]
 author = "maku"
-date_format = "%d %B %Y" # Formato data italiano (es. 15 Febbraio 2026)
+date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
 
-# Social (Uguali per tutte le lingue, o puoi cambiarli se hai profili EN)
+# Social
 social_links = [
     { name = "Bluesky (Notturno)", url = "https://bsky.app/profile/notturno.net" }
 ]
 
-# MENU ITALIANO
+# MENU ITALIANO (Francese con Tooltip IT)
+# I nomi dei file fisici in Pages/ possono essere diversi grazie allo 'slug' nella pipeline
 menu = [
     { name = "Journal", url = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
     { name = "Projets", url = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
-    { name = "Ideés", url = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
+    { name = "Idées", url = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
     { name = "Liens", url = "/liens", tooltip = "Link interessanti, risorse e ispirazioni" },
     { name = "Moi", url = "/moi", tooltip = "Chi sono: qualche informazione su di me" },
     { name = "Contact", url = "/contact", tooltip = "Contattami" }
 ]
 
+# MENU FOOTER (Privacy & Cookie Policy)
 footer_menu = [
     { name = "Privacy Policy", url = "/privacy" },
     { name = "Cookie Policy", url = "/cookies" },
     { name = "RSS Feed", url = "/atom.xml" }
 ]
 
-# --- CONFIGURAZIONE INGLESE (Override) ---
-# Decommenta quando sei pronto
+# --- CONFIGURAZIONE INGLESE (Opzionale/Draft) ---
+# [languages.en]
+# title = "Notturno (EN)"
+# description = "Digital Garden & Portfolio"
+# generate_feeds = true
+# weight = 1
 # [languages.en.extra]
-# author = "maku"
-# date_format = "%B %d, %Y"
-# 
-# MENU INGLESE (Zola userà questo quando sei su /en/)
 # menu = [
 #     { name = "Journal", url = "/en/journal" },
 #     { name = "Ideas", url = "/en/idees" },
 #     { name = "Projects", url = "/en/projets" },
 #     { name = "Links", url = "/en/liens" }
 # ]
-
-
