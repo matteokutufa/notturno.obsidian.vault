@@ -22,10 +22,10 @@ taxonomies = "on"
 
 # --- TASSONOMIE ---
 # Necessarie per gestire Tag e Categorie nel Front Matter
-taxonomies = [
-    { name = "tags", feed = true },
-    { name = "categories", feed = true },
-]
+#taxonomies = [
+#    { name = "tags", feed = true },
+#    { name = "categories", feed = true },
+#]
 
 # --- MARKDOWN ---
 [markdown]
