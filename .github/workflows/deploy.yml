@@ -115,14 +115,20 @@ jobs:
       # --- FASE 3: BUILD ---
       - name: 🏗️ Build Zola
         run: |
-          # Creazione index root con sorting abilitato
+          # 1. Crea l'index della HOME (per mostrare i post globali)
+          echo -e "+++\ntitle = \"Home\"\nsort_by = \"date\"\npaginate_by = 10\nrender = true\n+++" > .zola/content/_index.md
+
+          # 2. Crea gli index per le sezioni principali come trasparenti
+          # In questo modo i post in /journal/2026/02 "risalgono" fino alla home
           for s in journal idees projets liens; do
              if [ -d ".zola/content/$s" ]; then
-                # Fondamentale: sort_by = "date" per farli apparire nell'ordine corretto
-                echo -e "+++\ntitle = \"$s\"\nsort_by = \"date\"\ntransparent = true\n+++" > .zola/content/$s/_index.md
+                echo -e "+++\ntitle = \"$s\"\nsort_by = \"date\"\ntransparent = true\nrender = true\n+++" > .zola/content/$s/_index.md
+                
+                # Cerca sottocartelle (es. 2026/02) e crea _index.md trasparenti ricorsivamente
+                find .zola/content/$s -type d -not -path '*/.*' -exec sh -c 'echo -e "+++\ntransparent = true\n+++" > "{}/_index.md"' \;
              fi
           done
-          # Esegui la build
+
           cd .zola && zola build --base-url https://notturno.net
 
       - name: 🚀 Deploy

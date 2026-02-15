@@ -46,23 +46,7 @@ social_links = [
 
 # MENU ITALIANO (Francese con Tooltip IT)
 # I nomi dei file fisici in Pages/ possono essere diversi grazie allo 'slug' nella pipeline
-menu = [
-    { name = "Journal", url = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
-    { name = "Projets", url = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
-    { name = "Idées", url = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
-    { name = "Liens", url = "/liens", tooltip = "Link interessanti, risorse e ispirazioni" },
-    { name = "Moi", url = "/moi", tooltip = "Chi sono: qualche informazione su di me" },
-    { name = "Contact", url = "/contact", tooltip = "Contattami" }
-]
-
-# MENU FOOTER (Privacy & Cookie Policy)
-footer_menu = [
-    { name = "Privacy Policy", url = "/privacy" },
-    { name = "Cookie Policy", url = "/cookies" },
-    { name = "RSS Feed", url = "/atom.xml" }
-]
-
-navbar_items = [
+menu_items = [
     { name = "Journal", url = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
     { name = "Projets", url = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
     { name = "Idées", url = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
