@@ -115,20 +115,43 @@ jobs:
       # --- FASE 3: BUILD ---
       - name: 🏗️ Build Zola
         run: |
-          # 1. Crea l'index della HOME (per mostrare i post globali)
-          echo -e "+++\ntitle = \"Home\"\nsort_by = \"date\"\npaginate_by = 10\nrender = true\n+++" > .zola/content/_index.md
+          # 1. Crea l'index della HOME
+          cat <<EOF > .zola/content/_index.md
++++
+title = "Home"
+sort_by = "date"
+paginate_by = 10
+render = true
++++
+EOF
 
-          # 2. Crea gli index per le sezioni principali come trasparenti
-          # In questo modo i post in /journal/2026/02 "risalgono" fino alla home
+          # 2. Crea gli index per le sezioni principali e le sottocartelle
           for s in journal idees projets liens; do
              if [ -d ".zola/content/$s" ]; then
-                echo -e "+++\ntitle = \"$s\"\nsort_by = \"date\"\ntransparent = true\nrender = true\n+++" > .zola/content/$s/_index.md
+                # Index della sezione principale
+                cat <<EOF > .zola/content/$s/_index.md
++++
+title = "$s"
+sort_by = "date"
+transparent = true
+render = true
++++
+EOF
                 
-                # Cerca sottocartelle (es. 2026/02) e crea _index.md trasparenti ricorsivamente
-                find .zola/content/$s -type d -not -path '*/.*' -exec sh -c 'echo -e "+++\ntransparent = true\n+++" > "{}/_index.md"' \;
+                # Index trasparenti per tutte le sottocartelle (es. 2026, 2026/02)
+                find .zola/content/$s -type d -not -path '*/.*' | while read -r dir; do
+                  [ "$dir" = ".zola/content/$s" ] && continue
+                  cat <<EOF > "$dir/_index.md"
++++
+transparent = true
++++
+EOF
+                done
              fi
           done
 
+          # 3. Esegui la build
+          cd .zola && zola build --base-url https://notturno.net
           cd .zola && zola build --base-url https://notturno.net
 
       - name: 🚀 Deploy
