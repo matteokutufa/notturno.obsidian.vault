@@ -57,14 +57,13 @@ jobs:
           rm -rf Journal Idées Idees Projets Liens Pages Assets
 
       # --- FASE 2: PYTHON (Data da Path, Slug e Fix Link) ---
-      - name: 🧠 Logic Injection (Path to Date)
+      - name: 🧠 Logic Injection (Path to Date & Index Generation)
         shell: python
         run: |
           import os, re, unicodedata
           from datetime import datetime
 
           content_dir = ".zola/content"
-          # Regex per estrarre AAAA/MM dal percorso
           path_date_re = re.compile(r'(\d{4})[\\/](\d{2})')
           obs_img = re.compile(r'!\[\[(.*?)(?:\|(.*?))?\]\]')
 
@@ -72,25 +71,35 @@ jobs:
               t = unicodedata.normalize('NFKD', t).encode('ascii', 'ignore').decode('utf-8')
               return re.sub(r'[-\s]+', '-', re.sub(r'[^\w\s-]', '', t).strip().lower())
 
+          # 1. GENERAZIONE INDICI (_index.md)
+          # Root Index
+          with open(os.path.join(content_dir, "_index.md"), "w") as f:
+              f.write('+++\ntitle = "Home"\nsort_by = "date"\npaginate_by = 10\nrender = true\n+++\n')
+
+          sections = ["journal", "idees", "projets", "liens"]
+          for s in sections:
+              s_path = os.path.join(content_dir, s)
+              if os.path.exists(s_path):
+                  for root, dirs, _ in os.walk(s_path):
+                      is_root_section = (root == s_path)
+                      with open(os.path.join(root, "_index.md"), "w") as f:
+                          if is_root_section:
+                              f.write(f'+++\ntitle = "{s.title()}"\nsort_by = "date"\ntransparent = true\nrender = true\n+++\n')
+                          else:
+                              f.write('+++\ntransparent = true\n+++\n')
+
+          # 2. PROCESSO POST ESISTENTI
           for root, dirs, files in os.walk(content_dir):
               for fn in files:
                   if not fn.endswith(".md") or fn.startswith("_index"): continue
                   fp = os.path.join(root, fn)
                   
-                  # 1. Recupero data dal percorso AAAA/MM
                   date_match = path_date_re.search(fp)
-                  if date_match:
-                      # Se trovato nel path, impostiamo come YYYY-MM-01 (giorno fittizio se manca)
-                      extracted_date = f"{date_match.group(1)}-{date_match.group(2)}-01"
-                  else:
-                      extracted_date = datetime.utcnow().strftime('%Y-%m-%d')
+                  extracted_date = f"{date_match.group(1)}-{date_match.group(2)}-01" if date_match else datetime.utcnow().strftime('%Y-%m-%d')
 
                   with open(fp, 'r', encoding='utf-8') as f: lines = f.readlines()
                   
-                  # Generazione Titolo e Slug
                   raw_title = fn.replace(".md", "").replace("-", " ")
-                  
-                  # Front Matter
                   fm = [
                       "+++\n",
                       f"title = \"{raw_title.title()}\"\n",
@@ -100,13 +109,11 @@ jobs:
                       "+++\n\n"
                   ]
                   
-                  # 2. Fix link immagini (tutte in /assets/)
                   def repl(ma):
                       img_fn = os.path.basename(ma.group(1).strip()).replace(" ", "%20")
                       return f'![image](/assets/{img_fn})'
 
                   body = "".join(lines)
-                  # Rimuove H1 se duplicato
                   body = re.sub(r'^#\s+.*\n?', '', body, flags=re.MULTILINE)
                   new_content = "".join(fm) + obs_img.sub(repl, body)
 
@@ -115,43 +122,6 @@ jobs:
       # --- FASE 3: BUILD ---
       - name: 🏗️ Build Zola
         run: |
-          # 1. Crea l'index della HOME
-          cat <<EOF > .zola/content/_index.md
-          +++
-          title = "Home"
-          sort_by = "date"
-          paginate_by = 10
-          render = true
-          +++
-          EOF
-
-          # 2. Crea gli index per le sezioni principali e le sottocartelle
-          for s in journal idees projets liens; do
-             if [ -d ".zola/content/$s" ]; then
-                # Index della sezione principale
-                cat <<EOF > .zola/content/$s/_index.md
-          +++
-          title = "$s"
-          sort_by = "date"
-          transparent = true
-          render = true
-          +++
-                EOF
-                
-                # Index trasparenti per tutte le sottocartelle (es. 2026, 2026/02)
-                find .zola/content/$s -type d -not -path '*/.*' | while read -r dir; do
-                  [ "$dir" = ".zola/content/$s" ] && continue
-                  cat <<EOF > "$dir/_index.md"
-          +++
-          transparent = true
-          +++
-          EOF
-                done
-             fi
-          done
-
-          # 3. Esegui la build
-          cd .zola && zola build --base-url https://notturno.net
           cd .zola && zola build --base-url https://notturno.net
 
       - name: 🚀 Deploy
