@@ -99,22 +99,39 @@ jobs:
 
                   with open(fp, 'r', encoding='utf-8') as f: lines = f.readlines()
                   
+                  # Estrazione prima immagine per il Front Matter
+                  body_text = "".join(lines)
+                  first_img_match = obs_img.search(body_text)
+                  featured_img = ""
+                  if first_img_match:
+                      img_name = os.path.basename(first_img_match.group(1).strip()).replace(" ", "%20")
+                      featured_img = f"/assets/{img_name}"
+
                   raw_title = fn.replace(".md", "").replace("-", " ")
+                  
+                  # Front Matter arricchito per Duckquill
                   fm = [
                       "+++\n",
                       f"title = \"{raw_title.title()}\"\n",
                       f"date = {extracted_date}\n",
                       f"slug = \"{slugify(raw_title)}\"\n",
                       "template = \"page.html\"\n",
-                      "+++\n\n"
                   ]
+                  if featured_img:
+                      fm.append(f"extra.image = \"{featured_img}\"\n")
+                  fm.append("+++\n\n")
                   
+                  # Inserimento manuale dello "summary divider" di Zola dopo il primo paragrafo
+                  body = re.sub(r'^#\s+.*\n?', '', body_text, flags=re.MULTILINE)
+                  paragraphs = body.split('\n\n')
+                  if len(paragraphs) > 1:
+                      # Inserisce il marker per l'excerpt
+                      body = paragraphs[0] + "\n\n\n\n" + "\n\n".join(paragraphs[1:])
+
                   def repl(ma):
                       img_fn = os.path.basename(ma.group(1).strip()).replace(" ", "%20")
                       return f'![image](/assets/{img_fn})'
 
-                  body = "".join(lines)
-                  body = re.sub(r'^#\s+.*\n?', '', body, flags=re.MULTILINE)
                   new_content = "".join(fm) + obs_img.sub(repl, body)
 
                   with open(fp, 'w', encoding='utf-8') as f: f.write(new_content)
