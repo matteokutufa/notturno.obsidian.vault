@@ -18,7 +18,7 @@ compile_sass = true
 # Forza la coerenza tra i nomi file e gli URL (WordPress Style)
 [slugify]
 paths = "on"
-#taxonomies = "on"
+taxonomies = "on"
 
 # --- TASSONOMIE ---
 # Necessarie per gestire Tag e Categorie nel Front Matter
