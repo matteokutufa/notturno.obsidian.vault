@@ -1,0 +1,199 @@
+name: Deploy Obsidian Vault to Notturno.net
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Vault
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Zola
+        uses: taiki-e/install-action@v2
+        with:
+          tool: zola@0.19.1
+
+      # --- FASE 1: BASH (Struttura File System) ---
+      - name: 🛠️ Transform Vault to Zola Structure
+        run: |
+          echo "--- Inizio Trasformazione Strutturale ---"
+          
+          # 1. Preparazione Cartelle di Destinazione
+          mkdir -p .zola/content/journal
+          mkdir -p .zola/content/idees
+          mkdir -p .zola/content/projets
+          mkdir -p .zola/content/liens
+          mkdir -p .zola/static
+          
+          # 2. Copia Contenuti (Mantenendo struttura nidificata)
+          cp -r Journal/* .zola/content/journal/ 2>/dev/null || echo "Info: Journal vuoto"
+          
+          # Gestione Idées (accento vs no accento)
+          if [ -d "Idées" ]; then cp -r Idées/* .zola/content/idees/; fi
+          if [ -d "Idees" ]; then cp -r Idees/* .zola/content/idees/; fi
+          
+          cp -r Projets/* .zola/content/projets/ 2>/dev/null || echo "Info: Projets vuoto"
+          cp -r Liens/* .zola/content/liens/ 2>/dev/null || echo "Info: Liens vuoto"
+          
+          # 3. Pagine Singole (Moi, Contact...) -> Root di content
+          if [ -d "Pages" ]; then
+             echo "Copia pagine singole da Pages/..."
+             cp Pages/*.md .zola/content/
+          fi
+          
+          # 4. Assets (Centralizzazione Immagini)
+          echo "Centralizzazione Assets..."
+          find . -type d -name "Assets" -not -path "./.zola/*" -exec cp -r {}/* .zola/static/ \; 2>/dev/null || echo "Nessun asset trovato"
+
+          # 5. Generazione Index ROOT (Journal, Idees...) - Sezioni Normali
+          for section in journal idees projets liens; do
+            if [ ! -f ".zola/content/$section/_index.md" ]; then
+              TITLE=$(echo "$section" | sed 's/./\U&/') # Capitalize
+              if [ "$section" == "idees" ]; then TITLE="Idées"; fi
+              
+              echo -e "+++\ntitle = \"$TITLE\"\nsort_by = \"date\"\ntemplate = \"section.html\"\n+++" > .zola/content/$section/_index.md
+            fi
+          done
+
+          # 6. Generazione Index NIDIFICATI (Anni/Mesi) - Sezioni Trasparenti
+          # Permette ai post in 2026/02 di apparire nel feed principale
+          echo "Generazione Ghost Index..."
+          find .zola/content -type d | while read -r dir; do
+            # Escludiamo le root
+            if [[ "$dir" == ".zola/content" || "$dir" == ".zola/content/journal" || "$dir" == ".zola/content/idees" || "$dir" == ".zola/content/projets" || "$dir" == ".zola/content/liens" ]]; then
+              continue
+            fi
+            
+            if [ ! -f "$dir/_index.md" ]; then
+              dirname=$(basename "$dir")
+              echo -e "+++\ntitle = \"$dirname\"\nsort_by = \"date\"\ntemplate = \"section.html\"\ntransparent = true\n+++" > "$dir/_index.md"
+            fi
+          done
+
+      # --- FASE 2: PYTHON (Logica WordPress: Titoli, Slug, Date, Immagini) ---
+      - name: 🧠 Auto-Inject Metadata & Fix Links
+        shell: python
+        run: |
+          import os
+          import re
+          import unicodedata
+          from datetime import datetime
+
+          content_dir = ".zola/content"
+          obsidian_img_regex = re.compile(r'!\[\[(.*?)(?:\|(.*?))?\]\]')
+
+          def slugify(text):
+              """Crea slug puliti (es. 'Mio Titolo' -> 'mio-titolo')"""
+              text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
+              text = re.sub(r'[^\w\s-]', '', text).strip().lower()
+              return re.sub(r'[-\s]+', '-', text)
+
+          print("--- AVVIO PROCESSO WORDPRESS STYLE ---")
+
+          for root, dirs, files in os.walk(content_dir):
+              for filename in files:
+                  if not filename.endswith(".md"): continue
+                  if filename.startswith("_index"): continue 
+
+                  filepath = os.path.join(root, filename)
+                  
+                  try:
+                      with open(filepath, 'r', encoding='utf-8') as f:
+                          lines = f.readlines()
+                      
+                      # --- A. METADATA GENERATION ---
+                      has_frontmatter = len(lines) > 0 and lines[0].strip() == '+++'
+                      
+                      if not has_frontmatter:
+                          # 1. Analisi Nome File
+                          date_str = datetime.utcnow().strftime('%Y-%m-%d') # Default oggi
+                          raw_name = filename.replace(".md", "")
+                          
+                          # Cerca data nel nome file (YYYY-MM-DD-Titolo)
+                          file_date_match = re.match(r'^(\d{4}-\d{2}-\d{2})-(.*)', raw_name)
+                          
+                          if file_date_match:
+                              date_str = file_date_match.group(1)
+                              title_raw = file_date_match.group(2).replace("-", " ").strip()
+                          else:
+                              # Usa tutto il nome come titolo
+                              title_raw = raw_name.replace("-", " ").strip()
+                              
+                              # Cerca data nelle cartelle padre (es. .../2026/02/...)
+                              path_parts = filepath.split(os.sep)
+                              found_year = None
+                              found_month = "01"
+                              for part in path_parts:
+                                  if re.match(r'^\d{4}$', part): found_year = part
+                                  if re.match(r'^\d{2}$', part) and 1 <= int(part) <= 12: found_month = part
+                              if found_year:
+                                  date_str = f"{found_year}-{found_month}-01"
+
+                          final_title = title_raw
+                          final_slug = slugify(final_title)
+
+                          # 2. Pulizia Contenuto (Rimozione H1 doppio)
+                          body_start = 0
+                          if len(lines) > 0 and lines[0].strip().startswith("# "):
+                              # Se c'è un H1, lo saltiamo perché il titolo è ora nei metadati
+                              body_start = 1
+                              while body_start < len(lines) and lines[body_start].strip() == "":
+                                  body_start += 1
+                          
+                          # 3. Costruzione Front Matter
+                          fm = [
+                              "+++\n",
+                              f"title = \"{final_title}\"\n",
+                              f"date = {date_str}\n",
+                              f"slug = \"{final_slug}\"\n",
+                              "template = \"page.html\"\n",
+                              "+++\n\n"
+                          ]
+                          content_str = "".join(fm + lines[body_start:])
+                          print(f" -> Generato: '{final_title}' (Slug: {final_slug}, Date: {date_str})")
+                      else:
+                          content_str = "".join(lines)
+
+                      # --- B. FIX IMMAGINI (Da Obsidian a Standard) ---
+                      def replace_img(match):
+                          path = match.group(1).strip()
+                          alt = match.group(2).strip() if match.group(2) else ""
+                          # Se punta ad Assets, aggiungi lo slash iniziale
+                          if path.startswith("Assets/"): path = "/" + path
+                          return f'![{alt}]({path})'
+
+                      new_content, count = obsidian_img_regex.subn(replace_img, content_str)
+
+                      # --- C. SALVATAGGIO ---
+                      if not has_frontmatter or count > 0:
+                          with open(filepath, 'w', encoding='utf-8') as f:
+                              f.write(new_content)
+
+                  except Exception as e:
+                      print(f"ERR {filepath}: {e}")
+
+      - name: 🏗️ Build Site
+        working-directory: .zola
+        run: zola build --base-url https://notturno.net
+
+      - name: 🚀 Deploy to Backup Repo (notturno.net)
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.API_TOKEN_GITHUB }}
+        with:
+          source-directory: '.zola/public'
+          destination-github-username: 'matteokutufa'
+          destination-repository-name: 'notturno.net'
+          user-email: 'mk@bytehawks.org'
+          target-branch: main
+          commit-message: "Deploy: ${{ github.event.head_commit.message }}"

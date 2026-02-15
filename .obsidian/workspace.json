@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Projets/_index.md.md",
+                "file": "Journal/2025/02/Il palloncino rosso di Pennywise.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "_index.md"
+              "title": "Il palloncino rosso di Pennywise"
             }
           }
         ]
@@ -196,8 +196,11 @@
   },
   "active": "988733a767bfc632",
   "lastOpenFiles": [
-    "Liens/_index.md.md",
     "Projets/_index.md.md",
+    "Assets/Nuovo Documento di testo.txt",
+    "Assets",
+    "Nuova cartella",
+    "Liens/_index.md.md",
     "Ideés/_index.md.md",
     "Journal/_index.md.md",
     "Pages/Contact.md",
@@ -207,7 +210,6 @@
     "Pages/Privacy Policy.md",
     "Projets/Senza nome.md",
     "Pages",
-    "Nuova cartella",
     "Journal/2025/02/Assets/it-palloncino-rosso-pennywise.png",
     "Journal/2025/02/Assets",
     "Journal/2025/02",
@@ -215,7 +217,6 @@
     "Benvenuto.md",
     "Ideés",
     "Journal",
-    "Liens",
-    "Projets"
+    "Liens"
   ]
 }
