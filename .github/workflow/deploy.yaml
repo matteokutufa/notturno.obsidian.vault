@@ -4,6 +4,16 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'Journal/**'
+      - 'Idées/**'
+      - 'Idees/**'
+      - 'Projets/**'
+      - 'Liens/**'
+      - 'Pages/**'
+      - 'Assets/**'
+      - '.zola/**'
+      - '.github/workflows/deploy.yaml'
   workflow_dispatch:
 
 jobs:
