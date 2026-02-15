@@ -13,3 +13,5 @@ Il pensiero è semplice, diretto, un po' pop e sicuramente molto nerd ma credo c
 Senza entrare troppo nel racconto di Stephen King, credo che quel palloncino rappresenti in maniera vivida e semplice quello che sono i moderni sistemi di Intelligenza Artificiale, soprattutto nella loro forma più diretta e accessibili, ovvero i chatbot basati su LLM (Large Language Model) specialmente quando sono utilizzati e applicati in ambiti specifici legati all'IT come progettazione e amministrazione sistemi (SysOps e SysAdmins) o progettazione e sviluppo software (DevOps).
 
 Ci troviamo davanti uno strumento versatile, potente e fulmineo nel fornirci risposte; sempre più largamente utilizzato oltre che, quasi compulsivamente, interrogato per fornirci anche le risposte che già conosciamo ma delle quali desideriamo ottenere conferma e validazione.
+
+#IA #IntelligenzaArtificiale #IT
