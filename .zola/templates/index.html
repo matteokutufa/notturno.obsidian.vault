@@ -1,7 +1,17 @@
 {% extends "base.html" %}
+
 {% block content %}
-  {% set journal = get_section(path="journal/_index.md") %}
-  {% for page in journal.pages | sort(attribute="date") | reverse %}
-    <div>{{ page.date }}: <a href="{{ page.permalink }}">{{ page.title }}</a></div>
-  {% endfor %}
+<main>
+    <h1>Ultimi Post</h1>
+    <ul>
+        {# Recuperiamo esplicitamente la sezione journal #}
+        {% set journal = get_section(path="journal/_index.md") %}
+        {% for page in journal.pages | sort(attribute="date") | reverse %}
+            <li>
+                <span class="date">{{ page.date | date(format="%d/%m/%Y") }}</span>
+                <a href="{{ page.permalink }}">{{ page.title }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+</main>
 {% endblock content %}

@@ -14,7 +14,7 @@ on:
       - 'Liens/**'
       - 'Pages/**'
       - 'Assets/**'
-      
+
   workflow_dispatch:
 
 jobs:
@@ -115,10 +115,14 @@ jobs:
       # --- FASE 3: BUILD ---
       - name: 🏗️ Build Zola
         run: |
-          # Creazione index root per abilitare il sorting in home
+          # Creazione index root con sorting abilitato
           for s in journal idees projets liens; do
-             echo -e "+++\ntitle = \"$s\"\nsort_by = \"date\"\ntransparent = true\n+++" > .zola/content/$s/_index.md
+             if [ -d ".zola/content/$s" ]; then
+                # Fondamentale: sort_by = "date" per farli apparire nell'ordine corretto
+                echo -e "+++\ntitle = \"$s\"\nsort_by = \"date\"\ntransparent = true\n+++" > .zola/content/$s/_index.md
+             fi
           done
+          # Esegui la build
           cd .zola && zola build --base-url https://notturno.net
 
       - name: 🚀 Deploy
