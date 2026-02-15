@@ -13,28 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Benvenuto.md",
+                "file": "Journal/2025/02/Il palloncino rosso di Pennywise.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Benvenuto"
-            }
-          }
-        ]
-      },
-      {
-        "id": "fc1e3234a5bfe8fc",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "93b5bc606f111d0b",
-            "type": "leaf",
-            "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista grafo"
+              "title": "Il palloncino rosso di Pennywise"
             }
           }
         ]
@@ -94,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 402.5
   },
   "right": {
     "id": "fa921e14ea3924bd",
@@ -212,6 +196,15 @@
   },
   "active": "988733a767bfc632",
   "lastOpenFiles": [
-    "Benvenuto.md"
+    "Journal/2025/02/Assets/it-palloncino-rosso-pennywise.png",
+    "Journal/2025/02/Il palloncino rosso di Pennywise.md",
+    "Journal/2025/02/Assets",
+    "Journal/2025/02",
+    "Journal/2025",
+    "Benvenuto.md",
+    "Ideés",
+    "Journal",
+    "Liens",
+    "Projets"
   ]
 }
