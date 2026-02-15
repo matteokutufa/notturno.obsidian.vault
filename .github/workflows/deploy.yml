@@ -117,35 +117,35 @@ jobs:
         run: |
           # 1. Crea l'index della HOME
           cat <<EOF > .zola/content/_index.md
-+++
-title = "Home"
-sort_by = "date"
-paginate_by = 10
-render = true
-+++
-EOF
+          +++
+          title = "Home"
+          sort_by = "date"
+          paginate_by = 10
+          render = true
+          +++
+          EOF
 
           # 2. Crea gli index per le sezioni principali e le sottocartelle
           for s in journal idees projets liens; do
              if [ -d ".zola/content/$s" ]; then
                 # Index della sezione principale
                 cat <<EOF > .zola/content/$s/_index.md
-+++
-title = "$s"
-sort_by = "date"
-transparent = true
-render = true
-+++
-EOF
+          +++
+          title = "$s"
+          sort_by = "date"
+          transparent = true
+          render = true
+          +++
+                EOF
                 
                 # Index trasparenti per tutte le sottocartelle (es. 2026, 2026/02)
                 find .zola/content/$s -type d -not -path '*/.*' | while read -r dir; do
                   [ "$dir" = ".zola/content/$s" ] && continue
                   cat <<EOF > "$dir/_index.md"
-+++
-transparent = true
-+++
-EOF
+          +++
+          transparent = true
+          +++
+          EOF
                 done
              fi
           done
