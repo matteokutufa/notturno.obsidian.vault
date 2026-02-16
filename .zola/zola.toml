@@ -10,7 +10,7 @@ build_search_index = true
 author = "maku"
 default_language = "it"
 taxonomies = [{ name = "tags", feed = true }]
-date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
+#date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
 
 
 [search]
