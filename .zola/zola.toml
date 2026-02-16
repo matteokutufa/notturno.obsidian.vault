@@ -2,6 +2,8 @@
 base_url = "https://notturno.net"
 title = "Notturno"
 description = "Digital Garden & Portfolio"
+build_search_index = true
+
 
 # Lingua principale
 default_language = "it"
