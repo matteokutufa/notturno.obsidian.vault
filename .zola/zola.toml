@@ -6,13 +6,35 @@ theme = "duckquill"
 compile_sass = true
 
 
+[extra]
+author = "maku"
+date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
+default_language = "it"
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+
+# Social
+social_links = [
+    { name = "Bluesky (Notturno)", url = "https://bsky.app/profile/notturno.net" }
+]
+
+# MENU ITALIANO (Francese con Tooltip IT)
+# I nomi dei file fisici in Pages/ possono essere diversi grazie allo 'slug' nella pipeline
+menu = [
+    { name = "Journal", link = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
+    { name = "Projets", link = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
+    { name = "Idées", link = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
+    { name = "Liens", link = "/liens", tooltip = "Link interessanti, risorse e ispirazioni" },
+    { name = "Moi", link = "/moi", tooltip = "Chi sono: qualche informazione su di me" },
+    { name = "Contact", link = "/contact", tooltip = "Contattami" }
+]
 
 ## Lingua principale
-#default_language = "it"
+#
 #
 ## Parametri Feed (Sintassi Zola 0.19.x)
-#generate_feeds = true
-#feed_filenames = ["atom.xml"]
+#
+#
 #
 ## Tema
 #
@@ -39,25 +61,7 @@ compile_sass = true
 ##link_checker.level = "warn"
 #
 ## --- CONFIGURAZIONE ITALIANO (Default) ---
-#[extra]
-#author = "maku"
-#date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
-#
-## Social
-#social_links = [
-#    { name = "Bluesky (Notturno)", url = "https://bsky.app/profile/notturno.net" }
-#]
-#
-## MENU ITALIANO (Francese con Tooltip IT)
-## I nomi dei file fisici in Pages/ possono essere diversi grazie allo 'slug' nella pipeline
-#menu = [
-#    { name = "Journal", link = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
-#    { name = "Projets", link = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
-#    { name = "Idées", link = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
-#    { name = "Liens", link = "/liens", tooltip = "Link interessanti, risorse e ispirazioni" },
-#    { name = "Moi", link = "/moi", tooltip = "Chi sono: qualche informazione su di me" },
-#    { name = "Contact", link = "/contact", tooltip = "Contattami" }
-#]
+
 #
 ## MENU FOOTER (Privacy & Cookie Policy)
 #footer_items = [
