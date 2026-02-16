@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Journal/2026/02/Il palloncino rosso di Pennywise.md",
+                "file": "content/Contact.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Il palloncino rosso di Pennywise"
+              "title": "Contact"
             }
           }
         ]
@@ -194,29 +194,31 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "a0b1655797224fdd",
+  "active": "988733a767bfc632",
   "lastOpenFiles": [
+    "content/projets/_index.md.md",
+    "content/Contact.md",
+    "content/journal/(20250215) Il palloncino rosso di Pennywise.md",
+    "content/liens/_index.md.md",
+    "content/idees/_index.md.md",
+    "content/journal/_index.md.md",
+    "content",
+    "Benvenuto.md",
+    "static/DSC_9814.jpg",
+    "static/DSC_9814 1.jpg",
+    "static",
     "Projets/Senza nome.md",
-    "Journal/2026/02/Il palloncino rosso di Pennywise.md",
-    "Projets/_index.md.md",
     "Assets/Nuovo Documento di testo.txt",
     "Assets",
     "Nuova cartella",
-    "Liens/_index.md.md",
-    "Ideés/_index.md.md",
-    "Journal/_index.md.md",
-    "Pages/Contact.md",
-    "Pages/Moi.md",
-    "Pages/Cookie Policy.md",
-    "Pages/Privacy Policy.md",
-    "Pages",
-    "Journal/2026/02/Assets/it-palloncino-rosso-pennywise.png",
-    "Journal/2026/02/Assets",
-    "Journal/2026/02",
-    "Journal/2026",
-    "Benvenuto.md",
-    "Ideés",
-    "Journal",
-    "Liens"
+    "content/Moi.md",
+    "content/Cookie Policy.md",
+    "content/Privacy Policy.md",
+    "content/pages",
+    "static/it-palloncino-rosso-pennywise.png",
+    "content/journal/2026/02/Assets",
+    "content/journal/2026/02",
+    "content/journal/2026",
+    "content/idees"
   ]
 }

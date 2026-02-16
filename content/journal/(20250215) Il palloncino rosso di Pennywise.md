@@ -1,4 +1,3 @@
-Firenze, 15 febbraio 2026
 
 ![[it-palloncino-rosso-pennywise.png]]
 
