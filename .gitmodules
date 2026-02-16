@@ -1,3 +1,0 @@
-[submodule ".zola/themes/duckquill"]
-	path = .zola/themes/duckquill
-	url = https://codeberg.org/daudix/duckquill.git
