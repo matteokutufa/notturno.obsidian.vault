@@ -28,9 +28,10 @@ jobs:
 
       - name: Install Zola
         run: |
-          curl -L -o /usr/local/src/zola.tar.gz https://github.com/getzola/zola/releases/download/v0.22.1/zola-v0.22.1-x86_64-unknown-linux-gnu.tar.gz
-          tar -xzf /usr/local/src/zola.tar.gz -C /usr/local/bin zola
-          rm /usr/local/src/zola.tar.gz
+          curl -L -o zola.tar.gz https://github.com/getzola/zola/releases/download/v0.22.1/zola-v0.22.1-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf zola.tar.gz -C /tmp zola
+          chmod +x /tmp/zola
+          rm zola.tar.gz
 
       
       # --- FASE 1: BASH (Spostamento Asset e Pulizia) ---
@@ -141,7 +142,7 @@ jobs:
       # --- FASE 3: BUILD ---
       - name: 🏗️ Build Zola
         run: |
-          cd .zola && zola build --base-url https://notturno.net
+          cd .zola && /tmp/zola build --base-url https://notturno.net
 
       - name: 🚀 Deploy
         uses: cpina/github-action-push-to-another-repository@main
