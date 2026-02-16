@@ -44,10 +44,7 @@ csp = [
 show_feed = true
 show_theme_switcher = true
 links = [
-    { url = "@/journal/_index.md", name = "Journal" },
-    { url = "@/projets/_index.md", name = "Projets" },
-    { url = "@/idees/_index.md", name = "Idées" },
-    { url = "@/liens/_index.md", name = "Liens" }
+    { url = "@/journal/_index.md", name = "Journal" }
 ]
 
 #[extra.footer]
