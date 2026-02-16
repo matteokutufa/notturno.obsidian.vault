@@ -36,7 +36,7 @@ jobs:
           mv -v ./static .zola/ 2>/dev/null || true
 
           # Cleanup unnecessary files and folders
-          rm -vf .obsidian
+          rm -vfr .obsidian
 
       # --- FASE 2: PYTHON (Data da Path, Slug e Fix Link) ---
       - name: 🧠 Logic Injection (Path to Date & Index Generation)
