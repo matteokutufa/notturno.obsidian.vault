@@ -29,7 +29,7 @@ taxonomies = "on"
 
 # --- MARKDOWN ---
 [markdown]
-highlighting = true
+#highlighting = true
 render_emoji = true
 # Evita che la build fallisca per link non ancora risolti dalla pipeline
 link_checker.level = "warn"
