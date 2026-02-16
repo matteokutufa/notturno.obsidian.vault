@@ -1,39 +1,74 @@
 base_url = "https://notturno.net"
 title = "Notturno"
 description = "Digital Garden & Portfolio"
-build_search_index = true
-theme = "duckquill"
+
 compile_sass = true
+minify_html = true
+generate_feeds = true
+feed_filenames = ["rss.xml", "atom.xml"]
+build_search_index = true
+author = "maku"
+default_language = "it"
+taxonomies = [{ name = "tags", feed = true }]
+date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
+
+
+[search]
+# index_format = "elasticlunr_json"
+index_format = "fuse_json"
+
 
 
 [extra]
-author = "maku"
-date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
-default_language = "it"
-generate_feeds = true
-feed_filenames = ["atom.xml"]
-
-# Social
-social_links = [
-    { name = "Bluesky (Notturno)", url = "https://bsky.app/profile/notturno.net" }
+accent_color = "#ff7800"
+accent_color_dark = "#ffa348"
+emoji_favicon = "🌃"
+show_copy_button = true
+show_reading_time = true
+show_share_button = true
+show_backlinks = true
+csp = [
+	{ directive = "font-src", domains = ["'self'"] },
+	{ directive = "img-src", domains = ["'self'", "https:", "data:"] },
+	{ directive = "media-src", domains = ["'self'", "https:"] },
+	{ directive = "script-src", domains = ["'self'"] },
+	{ directive = "style-src", domains = ["'self'", "'unsafe-inline'"] },
+	{ directive = "frame-src", domains = ["https://player.vimeo.com", "https://www.youtube-nocookie.com", "https://toot.community"] },
+	{ directive = "connect-src", domains = ["https://toot.community"] },
+	{ directive = "base-uri", domains = ["'none'"] },
+	{ directive = "form-action", domains = ["'none'"] }
 ]
 
-# MENU ITALIANO (Francese con Tooltip IT)
-# I nomi dei file fisici in Pages/ possono essere diversi grazie allo 'slug' nella pipeline
-nav_links = [
-    { name = "Journal", link = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
-    { name = "Projets", link = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
-    { name = "Idées", link = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
-    { name = "Liens", link = "/liens", tooltip = "Link interessanti, risorse e ispirazioni" },
-    { name = "Moi", link = "/moi", tooltip = "Chi sono: qualche informazione su di me" },
-    { name = "Contact", link = "/contact", tooltip = "Contattami" }
+
+[extra.nav]
+show_feed = true
+show_theme_switcher = true
+links = [
+    { url = "@/journal/_index.md", name = "Journal" },
+    { url = "@/projets/_index.md", name = "Projets" },
+    { url = "@/idees/_index.md", name = "Idées" },
+    { url = "@/liens/_index.md", name = "Liens" },
+    { url = "@/moi/index.md", name = "Moi" },
+    { url = "@/contact/index.md", name = "Contact" }
 ]
 
-footer_links = [
-    { name = "Privacy Policy", link = "/privacy" },
-    { name = "Cookie Policy", link = "/cookies" },
-    { name = "RSS Feed", link = "/atom.xml" }
+[extra.footer]
+links = [
+	{ url = "@/privacy-policy/index.md", name = "Privacy Policy" },
+	{ url = "@/cookie-policy/index.md", name = "Cookie Policy" },
+	{ url = "@/atom.xml", name = "RSS" }
 ]
+socials = [
+    { url = "https://bsky.app/profile/notturno.net", name = "Bluesky"  }
+]
+
+
+
+
+
+
+
+
 
 ## Lingua principale
 #
