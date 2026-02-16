@@ -1,0 +1,77 @@
+# --- GLOBAL SETTINGS ---
+base_url = "https://notturno.net"
+title = "Notturno"
+description = "Digital Garden & Portfolio"
+
+# Lingua principale
+default_language = "it"
+
+# Parametri Feed (Sintassi Zola 0.19.x)
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+
+# Tema
+theme = "duckquill"
+compile_sass = true
+
+# --- SLUGIFY ---
+# Forza la coerenza tra i nomi file e gli URL (WordPress Style)
+[slugify]
+paths = "on"
+taxonomies = "on"
+
+# --- TASSONOMIE ---
+# Necessarie per gestire Tag e Categorie nel Front Matter
+#taxonomies = [
+#    { name = "tags", feed = true },
+#    { name = "categories", feed = true },
+#]
+
+# --- MARKDOWN ---
+[markdown]
+highlight_code = true
+render_emoji = true
+# Evita che la build fallisca per link non ancora risolti dalla pipeline
+link_checker.level = "warn"
+
+# --- CONFIGURAZIONE ITALIANO (Default) ---
+[extra]
+author = "maku"
+date_format = "%d %B %Y" # Formato: 15 Febbraio 2026
+
+# Social
+social_links = [
+    { name = "Bluesky (Notturno)", url = "https://bsky.app/profile/notturno.net" }
+]
+
+# MENU ITALIANO (Francese con Tooltip IT)
+# I nomi dei file fisici in Pages/ possono essere diversi grazie allo 'slug' nella pipeline
+menu = [
+    { name = "Journal", link = "/journal", tooltip = "Blog, il mio diario di bordo digitale" },
+    { name = "Projets", link = "/projets", tooltip = "Progetti: in corso, passati e futuri" },
+    { name = "Idées", link = "/idees", tooltip = "Idee e riflessioni senza un vero filo logico" },
+    { name = "Liens", link = "/liens", tooltip = "Link interessanti, risorse e ispirazioni" },
+    { name = "Moi", link = "/moi", tooltip = "Chi sono: qualche informazione su di me" },
+    { name = "Contact", link = "/contact", tooltip = "Contattami" }
+]
+
+# MENU FOOTER (Privacy & Cookie Policy)
+footer_items = [
+    { name = "Privacy Policy", link = "/privacy" },
+    { name = "Cookie Policy", link = "/cookies" },
+    { name = "RSS Feed", link = "/atom.xml" }
+]
+
+# --- CONFIGURAZIONE INGLESE (Opzionale/Draft) ---
+# [languages.en]
+# title = "Notturno (EN)"
+# description = "Digital Garden & Portfolio"
+# generate_feeds = true
+# weight = 1
+# [languages.en.extra]
+# menu = [
+#     { name = "Journal", url = "/en/journal" },
+#     { name = "Ideas", url = "/en/idees" },
+#     { name = "Projects", url = "/en/projets" },
+#     { name = "Links", url = "/en/liens" }
+# ]
