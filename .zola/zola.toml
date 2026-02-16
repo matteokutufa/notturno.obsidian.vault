@@ -50,15 +50,15 @@ links = [
     { url = "@/liens/_index.md", name = "Liens" }
 ]
 
-[extra.footer]
+#[extra.footer]
 #links = [
 #	{ url = "@/privacy-policy/index.md", name = "Privacy Policy" },
 #	{ url = "@/cookie-policy/index.md", name = "Cookie Policy" },
 #	{ url = "@/atom.xml", name = "RSS" }
 #]
-socials = [
-    { url = "https://bsky.app/profile/notturno.net", name = "Bluesky"  }
-]
+#socials = [
+#    { url = "https://bsky.app/profile/notturno.net", name = "Bluesky"  }
+#]
 
 
 
