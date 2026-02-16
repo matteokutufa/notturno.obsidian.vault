@@ -27,10 +27,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install Zola
-        uses: taiki-e/install-action@v2
-        with:
-          tool: zola@0.19.1
+        run: |
+          curl -L -o /usr/local/src/zola.tar.gz https://github.com/getzola/zola/releases/download/v0.22.1/zola-v0.22.1-x86_64-unknown-linux-gnu.tar.gz
+          tar -xzf /usr/local/src/zola.tar.gz -C /usr/local/bin zola
+          rm /usr/local/src/zola.tar.gz
 
+      
       # --- FASE 1: BASH (Spostamento Asset e Pulizia) ---
       - name: 🛠️ Resource Management & Flattening
         run: |
