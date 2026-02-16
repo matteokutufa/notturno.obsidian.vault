@@ -47,17 +47,15 @@ links = [
     { url = "@/journal/_index.md", name = "Journal" },
     { url = "@/projets/_index.md", name = "Projets" },
     { url = "@/idees/_index.md", name = "Idées" },
-    { url = "@/liens/_index.md", name = "Liens" },
-    { url = "@/moi/index.md", name = "Moi" },
-    { url = "@/contact/index.md", name = "Contact" }
+    { url = "@/liens/_index.md", name = "Liens" }
 ]
 
 [extra.footer]
-links = [
-	{ url = "@/privacy-policy/index.md", name = "Privacy Policy" },
-	{ url = "@/cookie-policy/index.md", name = "Cookie Policy" },
-	{ url = "@/atom.xml", name = "RSS" }
-]
+#links = [
+#	{ url = "@/privacy-policy/index.md", name = "Privacy Policy" },
+#	{ url = "@/cookie-policy/index.md", name = "Cookie Policy" },
+#	{ url = "@/atom.xml", name = "RSS" }
+#]
 socials = [
     { url = "https://bsky.app/profile/notturno.net", name = "Bluesky"  }
 ]
